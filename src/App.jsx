@@ -203,6 +203,88 @@ const contactLinks = [
   },
 ];
 
+const terminalTabs = ["General", "Projects", "Signals", "Runtime"];
+
+const terminalViews = [
+  {
+    title: "macro-audit.journal",
+    command: "/workspace/macro-audit --mode live",
+    headline: "Trading execution system, tuned for review and discipline.",
+    summary: "Built to turn messy trade history into readable patterns, focused journaling, and fast post-analysis loops.",
+    metrics: [
+      ["Mode", "Live shipping"],
+      ["Surface", "Trader analytics"],
+      ["Stack", "React + TS"],
+      ["Focus", "Execution review"],
+    ],
+    logs: [
+      "journal.sync         complete",
+      "analytics.pipeline   online",
+      "review.loop          stable",
+    ],
+  },
+  {
+    title: "shg.capacitor.cli",
+    command: "/workspace/shg run android",
+    headline: "Developer tooling that removes friction from Capacitor shipping.",
+    summary: "A command surface for repeatable mobile builds, cleaner sync flows, and less context-switching across the stack.",
+    metrics: [
+      ["Mode", "Active build"],
+      ["Surface", "CLI tooling"],
+      ["Stack", "Node + TS"],
+      ["Focus", "DX systems"],
+    ],
+    logs: [
+      "platform.sync        complete",
+      "build.graph          optimized",
+      "device.loop          ready",
+    ],
+  },
+  {
+    title: "private.research",
+    command: "/workspace/classified --access scoped",
+    headline: "Private intelligent systems work for high-leverage problems.",
+    summary: "Exploring automation, meta-learning, and decision-support patterns that are better shown in conversation than in public.",
+    metrics: [
+      ["Mode", "Restricted"],
+      ["Surface", "Research"],
+      ["Stack", "Python + ML"],
+      ["Focus", "Adaptive systems"],
+    ],
+    logs: [
+      "memory.graph         training",
+      "signal.engine        learning",
+      "briefing.mode        invite-only",
+    ],
+  },
+  {
+    title: "runtime.signal",
+    command: "/workspace/runtime --watch signals",
+    headline: "Monitoring product signals, experiments, and system health in motion.",
+    summary: "A live view of what matters now: product momentum, tool stability, and the next surface worth improving.",
+    metrics: [
+      ["Mode", "Monitoring"],
+      ["Surface", "Runtime view"],
+      ["Stack", "Node + Python"],
+      ["Focus", "Signal quality"],
+    ],
+    logs: [
+      "release.pulse        green",
+      "feedback.loop        active",
+      "next.iteration       queued",
+    ],
+  },
+];
+
+function formatClock(date) {
+  return new Intl.DateTimeFormat("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  }).format(date);
+}
+
 function scrollToSection(id, closeMenu) {
   document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
   closeMenu?.();
@@ -211,6 +293,8 @@ function scrollToSection(id, closeMenu) {
 export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [cvPreviewOpen, setCvPreviewOpen] = useState(false);
+  const [activeTerminalIndex, setActiveTerminalIndex] = useState(0);
+  const [clock, setClock] = useState(() => formatClock(new Date()));
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
@@ -231,6 +315,23 @@ export default function App() {
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
+
+  useEffect(() => {
+    const clockTimer = window.setInterval(() => {
+      setClock(formatClock(new Date()));
+    }, 1000);
+
+    const panelTimer = window.setInterval(() => {
+      setActiveTerminalIndex((index) => (index + 1) % terminalViews.length);
+    }, 3200);
+
+    return () => {
+      window.clearInterval(clockTimer);
+      window.clearInterval(panelTimer);
+    };
+  }, []);
+
+  const activeView = terminalViews[activeTerminalIndex];
 
   return (
     <div className="site-shell">
@@ -292,6 +393,75 @@ export default function App() {
               </h1>
             </div>
             <div className="hero-side">
+              <aside className="hero-terminal">
+                <div className="terminal-topbar">
+                  <div className="terminal-tabs" aria-label="Live terminal views">
+                    {terminalTabs.map((tab, index) => (
+                      <span
+                        key={tab}
+                        className={`terminal-tab ${index === activeTerminalIndex ? "active" : ""}`}
+                      >
+                        {tab}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="terminal-meta">
+                    <span className="terminal-session">tkay.systems@live</span>
+                    <span className="terminal-clock">{clock}</span>
+                  </div>
+                </div>
+
+                <div className="terminal-body">
+                  <div className="terminal-scanline" />
+
+                  <div className="terminal-command-row">
+                    <span className="terminal-prompt">$</span>
+                    <span className="terminal-command">{activeView.command}</span>
+                    <span className="terminal-cursor" />
+                  </div>
+
+                  <div className="terminal-hero-copy">
+                    <p className="terminal-file">{activeView.title}</p>
+                    <h2>{activeView.headline}</h2>
+                    <p>{activeView.summary}</p>
+                  </div>
+
+                  <div className="terminal-panels">
+                    <section className="terminal-box">
+                      <div className="terminal-box-title">Status</div>
+                      <div className="terminal-metrics">
+                        {activeView.metrics.map(([label, value]) => (
+                          <div key={label} className="terminal-metric">
+                            <span>{label}</span>
+                            <strong>{value}</strong>
+                          </div>
+                        ))}
+                      </div>
+                    </section>
+
+                    <section className="terminal-box">
+                      <div className="terminal-box-title">Live Feed</div>
+                      <div className="terminal-log-list">
+                        {activeView.logs.map((log, index) => (
+                          <div
+                            key={log}
+                            className={`terminal-log ${index === 1 ? "highlight" : ""}`}
+                          >
+                            <span className="terminal-log-label">{log.split(/\s{2,}/)[0]}</span>
+                            <strong>{log.split(/\s{2,}/)[1] ?? ""}</strong>
+                          </div>
+                        ))}
+                      </div>
+                    </section>
+                  </div>
+
+                  <div className="terminal-footer">
+                    <span>[Enter] inspect</span>
+                    <span>[Tab] rotate view</span>
+                    <span>[Esc] clear noise</span>
+                  </div>
+                </div>
+              </aside>
               <p className="hero-copy">
                 I design and build software that turns messy workflows into
                 focused tools, from trading products to developer utilities and
